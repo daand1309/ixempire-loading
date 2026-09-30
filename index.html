@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Imperial Occupation</title>
+<!--
+	IMPERIAL OCCUPATION -- LOADING SCREEN (0.152)
+
+	Shown by Garry's Mod while a player connects. The server points players
+	here with the convar sv_loadingurl, which the schema sets from the Helix
+	config "loadingScreenURL" (imperialui/sh_plugin.lua).
+
+	Garry's Mod calls these functions while it loads:
+	  GameDetails(serverName, serverURL, map, maxPlayers, steamID, gamemode, volume, language)
+	  SetFilesTotal(total)   SetFilesNeeded(needed)
+	  DownloadingFile(file)  SetStatusChanged(status)
+
+	Plain ES5 on purpose (no arrow functions, no let/const): the game's
+	browser is not always a modern one. Fonts are the ones the content pack
+	ships (fonts/), so nothing is fetched from the internet.
+
+	Words to change live in TEXT below -- the commands and the directives.
+-->
+<style>
+@font-face { font-family: "StarJedi"; src: url("fonts/starjedi.ttf") format("truetype"); }
+@font-face { font-family: "ImpMono"; src: url("fonts/sharetechmono.ttf") format("truetype"); }
+@font-face { font-family: "ImpBody"; src: url("fonts/robotocondensed_regular.ttf") format("truetype"); }
+@font-face { font-family: "ImpBody"; font-weight: bold; src: url("fonts/robotocondensed_bold.ttf") format("truetype"); }
+
+html, body {
+	margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+	background: #000; color: #d8dee4;
+	font-family: "ImpBody", "Roboto Condensed", Arial, sans-serif;
+	-webkit-user-select: none; user-select: none; cursor: default;
+}
+
+/* Faint hangar grid, as on the intro card. */
+#grid {
+	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+	background-image:
+		-webkit-linear-gradient(left, rgba(70, 76, 84, 0.10) 1px, transparent 1px),
+		-webkit-linear-gradient(top, rgba(70, 76, 84, 0.10) 1px, transparent 1px);
+	background-image:
+		linear-gradient(to right, rgba(70, 76, 84, 0.10) 1px, transparent 1px),
+		linear-gradient(to bottom, rgba(70, 76, 84, 0.10) 1px, transparent 1px);
+	background-size: 90px 90px;
+}
+
+/* Red glow behind the crest and a dark edge. */
+#vignette {
+	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+	background: -webkit-radial-gradient(50% 30%, circle, rgba(190, 40, 45, 0.16) 0%, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.85) 100%);
+	background: radial-gradient(circle at 50% 30%, rgba(190, 40, 45, 0.16) 0%, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+/* Scanlines over everything, very faint. */
+#scan {
+	position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none;
+	background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+	background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+	background-size: 100% 3px;
+}
+
+#sweep {
+	position: absolute; left: 0; right: 0; height: 120px; top: -120px; pointer-events: none;
+	background: -webkit-linear-gradient(top, rgba(190, 40, 45, 0) 0%, rgba(190, 40, 45, 0.06) 60%, rgba(190, 40, 45, 0) 100%);
+	background: linear-gradient(to bottom, rgba(190, 40, 45, 0) 0%, rgba(190, 40, 45, 0.06) 60%, rgba(190, 40, 45, 0) 100%);
+	-webkit-animation: sweep 7s linear infinite; animation: sweep 7s linear infinite;
+}
+@-webkit-keyframes sweep { from { top: -120px; } to { top: 100%; } }
+@keyframes sweep { from { top: -120px; } to { top: 100%; } }
+
+#page {
+	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+	padding: 4vh 4vw; box-sizing: border-box;
+}
+
+/* ---- header: crest, title, rule, location ---- */
+#head { text-align: center; margin-top: 1vh; }
+#crest { width: 11vh; height: 11vh; display: block; margin: 0 auto;
+	-webkit-animation: glow 4s ease-in-out infinite; animation: glow 4s ease-in-out infinite; }
+@-webkit-keyframes glow { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+@keyframes glow { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+
+/* Star Jedi draws its NORMAL capitals from the lower-case keys: keep the
+   title text in lower case. */
+#title {
+	font-family: "StarJedi", "ImpBody", sans-serif; font-weight: normal;
+	font-size: 5.6vh; letter-spacing: 0.25vh; margin: 1.6vh 0 0 0; color: #d8dee4;
+	text-shadow: 0 0 2vh rgba(190, 40, 45, 0.35);
+}
+#rule { width: 22%; height: 1px; margin: 1.6vh auto 1.2vh auto; background: #be282d; }
+#where {
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.7vh;
+	letter-spacing: 0.35vh; color: #828a94;
+}
+
+/* ---- panels ---- */
+.panel {
+	position: relative; background: rgba(14, 15, 17, 0.88);
+	border: 1px solid rgba(70, 76, 84, 0.7); border-left: 3px solid #be282d;
+	padding: 2vh 1.8vw; box-sizing: border-box;
+}
+/* The corner brackets of the viewfinder framing. */
+.panel .c { position: absolute; width: 14px; height: 14px; border-color: #be282d; border-style: solid; border-width: 0; }
+.panel .tl { left: -1px; top: -1px; border-top-width: 2px; border-left-width: 2px; }
+.panel .tr { right: -1px; top: -1px; border-top-width: 2px; border-right-width: 2px; }
+.panel .bl { left: -1px; bottom: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+.panel .br { right: -1px; bottom: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+
+.kicker {
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.45vh;
+	letter-spacing: 0.3vh; color: #be282d; margin-bottom: 1.2vh;
+}
+.kicker .dot { display: inline-block; width: 0.8vh; height: 0.8vh; background: #be282d; margin-right: 0.8vh; vertical-align: middle;
+	-webkit-animation: blink 1.2s steps(2) infinite; animation: blink 1.2s steps(2) infinite; }
+@-webkit-keyframes blink { 50% { opacity: 0.15; } }
+@keyframes blink { 50% { opacity: 0.15; } }
+
+/* ---- welcome ---- */
+#welcome { width: 52%; margin: 3vh auto 0 auto; text-align: center; }
+#welcome h2 {
+	margin: 0; font-weight: bold; font-size: 3.2vh; letter-spacing: 0.4vh; text-transform: uppercase;
+}
+#welcome p { margin: 1.1vh 0 0 0; font-size: 2vh; color: #aeb5bd; line-height: 1.45; }
+
+/* ---- progress ---- */
+#status-row { margin-top: 2.2vh; overflow: hidden; font-family: "ImpMono", "Courier New", monospace; font-size: 1.6vh; letter-spacing: 0.15vh; }
+#status { float: left; color: #d8dee4; text-transform: uppercase; }
+#percent { float: right; color: #be282d; }
+#bar { margin-top: 0.8vh; height: 1.2vh; background: rgba(70, 76, 84, 0.35); position: relative; overflow: hidden; }
+#fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: #be282d;
+	-webkit-transition: width 0.4s ease-out; transition: width 0.4s ease-out; }
+#fill:after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 6px; background: #ff6a6f; }
+#file {
+	margin-top: 0.8vh; height: 1.8vh; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.4vh; color: #828a94; text-align: left;
+}
+
+/* ---- lower row: commands + directive ---- */
+#lower { margin-top: 3vh; overflow: hidden; }
+#commands { float: left; width: 55%; }
+#side { float: right; width: 40%; }
+
+table { width: 100%; border-collapse: collapse; }
+td { padding: 0.45vh 0; font-size: 1.75vh; vertical-align: top; }
+td.cmd {
+	width: 34%; font-family: "ImpMono", "Courier New", monospace; color: #e6af28; white-space: nowrap; padding-right: 1vw;
+}
+td.what { color: #aeb5bd; }
+.cols { overflow: hidden; }
+.cols table { float: left; width: 49%; }
+.cols table + table { margin-left: 2%; }
+
+#directive { min-height: 11vh; }
+#directive-text {
+	font-size: 2.1vh; line-height: 1.45; color: #d8dee4;
+	-webkit-transition: opacity 0.6s; transition: opacity 0.6s;
+}
+#directive-from {
+	margin-top: 1vh; font-family: "ImpMono", "Courier New", monospace; font-size: 1.35vh; letter-spacing: 0.2vh; color: #828a94;
+}
+#tips { margin-top: 2vh; }
+#tip-text { font-size: 1.85vh; line-height: 1.45; color: #aeb5bd;
+	-webkit-transition: opacity 0.6s; transition: opacity 0.6s; }
+
+/* ---- footer ---- */
+#foot {
+	position: absolute; left: 4vw; right: 4vw; bottom: 3vh; overflow: hidden;
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.4vh; letter-spacing: 0.2vh; color: #5d646d;
+}
+#foot .l { float: left; } #foot .r { float: right; }
+#foot b { color: #828a94; font-weight: normal; }
+</style>
+</head>
+<body>
+<div id="grid"></div>
+<div id="vignette"></div>
+
+<div id="page">
+	<div id="head">
+		<!-- The server insignia, the same geometry as imperialui cl_theme.lua DrawInsignia. -->
+		<svg id="crest" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+			<g fill="none" stroke="#be282d" stroke-width="5" stroke-linejoin="miter" stroke-linecap="square">
+				<polygon points="110,10 196.6,60 196.6,160 110,210 23.4,160 23.4,60"/>
+				<polygon points="110,58 155.03,84 155.03,136 110,162 64.97,136 64.97,84"/>
+				<line x1="110" y1="10" x2="110" y2="58"/>
+				<line x1="196.6" y1="60" x2="155.03" y2="84"/>
+				<line x1="196.6" y1="160" x2="155.03" y2="136"/>
+				<line x1="110" y1="210" x2="110" y2="162"/>
+				<line x1="23.4" y1="160" x2="64.97" y2="136"/>
+				<line x1="23.4" y1="60" x2="64.97" y2="84"/>
+				<line x1="110" y1="10" x2="110" y2="210"/>
+			</g>
+		</svg>
+		<h1 id="title">imperial occupation</h1>
+		<div id="rule"></div>
+		<div id="where">VARDOS CITY-24 &nbsp;&bull;&nbsp; GALACTIC EMPIRE</div>
+	</div>
+
+	<div id="welcome" class="panel">
+		<span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
+		<div class="kicker"><span class="dot"></span>ESTABLISHING UPLINK</div>
+		<h2 id="welcome-title">Welcome to the server</h2>
+		<p>Please be patient while we load the content. Your first visit downloads the
+		server's content pack and can take a few minutes -- after that it is much faster.</p>
+		<div id="status-row"><span id="status">Connecting</span><span id="percent"></span></div>
+		<div id="bar"><div id="fill"></div></div>
+		<div id="file">&nbsp;</div>
+	</div>
+
+	<div id="lower">
+		<div id="commands" class="panel">
+			<span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
+			<div class="kicker">USEFUL COMMANDS</div>
+			<div class="cols">
+				<table id="cmds-a"></table>
+				<table id="cmds-b"></table>
+			</div>
+		</div>
+
+		<div id="side">
+			<div id="directive" class="panel">
+				<span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
+				<div class="kicker"><span class="dot"></span>STANDING DIRECTIVE</div>
+				<div id="directive-text">&nbsp;</div>
+				<div id="directive-from">-- IMPERIAL ADMINISTRATION</div>
+			</div>
+			<div id="tips" class="panel">
+				<span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
+				<div class="kicker">NEW HERE?</div>
+				<div id="tip-text">&nbsp;</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="foot">
+		<span class="l"><b id="server">IMPERIAL OCCUPATION</b></span>
+		<span class="r">SECTOR MAP <b id="map">--</b> &nbsp;&bull;&nbsp; CAPACITY <b id="players">--</b></span>
+	</div>
+</div>
+<div id="scan"></div>
+<div id="sweep"></div>
+
+<script>
+var TEXT = {
+	// Command, what it does. Split over two columns.
+	commands: [
+		["F1", "Menu, inventory, handbook"],
+		["F2", "Emote wheel"],
+		["/FAQ [word]", "The city handbook"],
+		["/Report", "Ask staff for help"],
+		["//  or /OOC", "Out-of-character chat (everyone)"],
+		[".//  or /LOOC", "Out-of-character chat (nearby)"],
+		["/Me", "Describe an action"],
+		["/It", "Describe the world around you"],
+		["/W  /Y", "Whisper or yell"],
+		["/PM", "Private message a player"],
+		["/Apply", "Present your papers"],
+		["/Roll", "Roll a number"],
+		["/Merits", "Your merit balance"],
+		["/Shift", "Your labour shift"]
+	],
+
+	// In-character propaganda, one at a time.
+	directives: [
+		"Carry your papers at all times. A citizen without a chain code is a citizen without a future.",
+		"Report suspicious activity to the nearest officer. Vigilance is loyalty.",
+		"Curfew is announced over the city address. Be indoors when it sounds.",
+		"Honest labour earns merits. Merits earn comfort. The Empire rewards the diligent.",
+		"Checkpoints exist for your protection. Present your papers without delay.",
+		"The underground is off limits. What lives down there is not your concern.",
+		"Rations are issued by standing. Loyal citizens eat well.",
+		"Order is peace. Peace is the gift of the Empire."
+	],
+
+	// Out-of-character tips for newcomers.
+	tips: [
+		"Look for Helper Joe near the arrival point -- he explains the city and can give you a guided tour.",
+		"Press F1 and open the Handbook, or type /FAQ followed by a word, e.g. /FAQ rations.",
+		"This is a serious roleplay server: stay in character, and use // or .// for anything out of character.",
+		"Stuck, bugged or wronged? Type /Report and a staff member will come to you.",
+		"New citizens get papers with a chain code. Keep them -- officers will ask for them.",
+		"Work a shift at the labour terminal to earn merits; spend them at vending machines.",
+		"Want to serve? Citizens can apply to the Police or Government at the Civic Petition Terminal."
+	]
+};
+
+// ---------------------------------------------------------------------------
+
+function $(id) { return document.getElementById(id); }
+
+function escapeHTML(text) {
+	return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+(function fillCommands() {
+	var half = Math.ceil(TEXT.commands.length / 2);
+	var tables = [$("cmds-a"), $("cmds-b")];
+
+	for (var i = 0; i < TEXT.commands.length; i++) {
+		var row = TEXT.commands[i];
+		var html = "<tr><td class='cmd'>" + escapeHTML(row[0]) + "</td><td class='what'>" + escapeHTML(row[1]) + "</td></tr>";
+
+		tables[i < half ? 0 : 1].innerHTML += html;
+	}
+})();
+
+function Rotator(element, list, seconds) {
+	var index = Math.floor(Math.random() * list.length);
+
+	function show() {
+		element.style.opacity = 0;
+
+		setTimeout(function () {
+			element.innerHTML = escapeHTML(list[index]);
+			element.style.opacity = 1;
+			index = (index + 1) % list.length;
+		}, 600);
+	}
+
+	show();
+	setInterval(show, seconds * 1000);
+}
+
+Rotator($("directive-text"), TEXT.directives, 9);
+Rotator($("tip-text"), TEXT.tips, 11);
+
+// ---- loading progress ------------------------------------------------------
+
+var filesTotal = 0;
+var filesNeeded = 0;
+var neededKnown = false;
+var stageShown = 0;
+
+// Rough stage of a load with nothing to download, from Garry's Mod's status lines.
+var STAGES = [
+	["retrieving", 0.10], ["sending client", 0.20], ["workshop", 0.35], ["mounting", 0.45],
+	["downloading", 0.50], ["lua", 0.70], ["client info", 0.75], ["starting", 0.85],
+	["sending", 0.90], ["complete", 0.95]
+];
+
+function setProgress(fraction) {
+	fraction = Math.max(0, Math.min(1, fraction));
+	stageShown = Math.max(stageShown, fraction);
+	$("fill").style.width = (stageShown * 100).toFixed(1) + "%";
+	$("percent").innerHTML = Math.floor(stageShown * 100) + "%";
+}
+
+function refreshFiles() {
+	// SetFilesTotal comes before SetFilesNeeded: until both are in, "all
+	// files done" would read as 90%.
+	if (filesTotal > 0 && neededKnown) {
+		var done = Math.max(0, filesTotal - filesNeeded);
+
+		setProgress(done / filesTotal * 0.9);
+		$("percent").innerHTML = done + " / " + filesTotal + " FILES";
+	}
+}
+
+// Called by Garry's Mod ------------------------------------------------------
+
+function GameDetails(serverName, serverURL, mapName, maxPlayers, steamID, gamemode, volume, language) {
+	if (serverName) { $("server").innerHTML = escapeHTML(serverName).toUpperCase(); }
+	if (mapName) { $("map").innerHTML = escapeHTML(mapName).toUpperCase(); }
+	if (maxPlayers) { $("players").innerHTML = escapeHTML(maxPlayers) + " CITIZENS"; }
+}
+
+function SetFilesTotal(total) {
+	filesTotal = Number(total) || 0;
+	refreshFiles();
+}
+
+function SetFilesNeeded(needed) {
+	filesNeeded = Number(needed) || 0;
+	neededKnown = true;
+	refreshFiles();
+}
+
+function DownloadingFile(fileName) {
+	$("file").innerHTML = "&gt; " + escapeHTML(fileName);
+
+	if (filesTotal > 0 && neededKnown) {
+		filesNeeded = Math.max(0, filesNeeded - 1);
+		refreshFiles();
+	}
+}
+
+function SetStatusChanged(status) {
+	status = String(status || "");
+	$("status").innerHTML = escapeHTML(status.replace(/\.+$/, "")) || "Loading";
+
+	if (filesTotal > 0 && neededKnown && filesNeeded > 0) {
+		return;
+	}
+
+	var lower = status.toLowerCase();
+
+	for (var i = 0; i < STAGES.length; i++) {
+		if (lower.indexOf(STAGES[i][0]) >= 0) {
+			setProgress(STAGES[i][1]);
+		}
+	}
+}
+
+// A little movement even before the game says anything.
+setProgress(0.03);
+</script>
+</body>
+</html>
