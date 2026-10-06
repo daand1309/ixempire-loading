@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Imperial Occupation</title>
 <!--
-	IMPERIAL OCCUPATION -- LOADING SCREEN (0.152)
+	IMPERIAL OCCUPATION -- LOADING SCREEN (0.152; words updated 0.298)
 
 	Shown by Garry's Mod while a player connects. The server points players
 	here with the convar sv_loadingurl, which the schema sets from the Helix
@@ -258,17 +258,22 @@ var TEXT = {
 		["/PM", "Private message a player"],
 		["/Apply", "Present your papers"],
 		["/Roll", "Roll a number"],
-		["/Merits", "Your merit balance"],
-		["/Shift", "Your labour shift"]
+		["/Merits", "Merits, grade and honour roll"],
+		["/Shift", "Your labour shift"],
+		["/QuestBook", "Your quests"],
+		["/MyApartment", "The way to your flat"]
 	],
 
 	// In-character propaganda, one at a time.
 	directives: [
 		"Carry your papers at all times. A citizen without a chain code is a citizen without a future.",
+		"When an officer asks for your papers, hand them over. Refusal is noted.",
 		"Report suspicious activity to the nearest officer. Vigilance is loyalty.",
 		"Curfew is announced over the city address. Be indoors when it sounds.",
-		"Honest labour earns merits. Merits earn comfort. The Empire rewards the diligent.",
-		"Checkpoints exist for your protection. Present your papers without delay.",
+		"The Labour Directive: every citizen works. Idleness is a mark on your civic record.",
+		"Honest labour earns merits. Merits earn grades. The Empire rewards the diligent.",
+		"Checkpoints exist for your protection. The scanners read every chain code.",
+		"Licensed trade serves the city. Unlicensed trade serves the enemy.",
 		"The underground is off limits. What lives down there is not your concern.",
 		"Rations are issued by standing. Loyal citizens eat well.",
 		"Order is peace. Peace is the gift of the Empire."
@@ -280,9 +285,14 @@ var TEXT = {
 		"Press TAB and open the Handbook, or type /FAQ followed by a word, e.g. /FAQ rations.",
 		"This is a serious roleplay server: stay in character, and use // or .// for anything out of character.",
 		"Stuck, bugged or wronged? Type /Report and a staff member will come to you.",
-		"New citizens get papers with a chain code. Keep them -- officers will ask for them.",
-		"Work a shift at the labour terminal to earn merits; spend them at vending machines.",
-		"Want to serve? Citizens can apply to the Police or Government at the Civic Petition Terminal."
+		"New citizens get papers with a chain code. Keep them -- officers will ask you to hand them over.",
+		"Terminals open on a menu: pick a tile, or type in the search box to find what you need.",
+		"Work a shift at a Labour Terminal to earn credits and merits. Two hours idle costs merits.",
+		"Need a permit, a flat or a shop licence? File a petition at the Civic Petition Terminal.",
+		"Want to serve? Citizens can apply to the Police or Government at the Civic Petition Terminal.",
+		"Quest givers carry a ? over their head. /QuestBook shows what you have taken on.",
+		"Shops are run by players: take goods off the shelf and pay at the till.",
+		"Notice boards around the city carry adverts from other citizens -- pin your own."
 	]
 };
 
