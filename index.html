@@ -5,7 +5,9 @@
 <title>Imperial Occupation</title>
 <!--
 	IMPERIAL OCCUPATION -- LOADING SCREEN (0.152; words 0.298; bar 0.330;
-	face lift 0.331 in the registry / intro look)
+	face lift 0.331 in the registry / intro look; smooth through join
+	freezes 0.337 -- one frame loop with a clamped step, arrival held until
+	the game runs smoothly, background moved by transforms)
 
 	Shown by Garry's Mod while a player connects. The server points players
 	here with the convar sv_loadingurl, which the schema sets from the Helix
@@ -51,7 +53,7 @@ html, body {
 
 /* ---- backdrop: drifting grid, glow, vignette, scanlines, sweep ---- */
 #grid {
-	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+	position: absolute; left: -80px; top: -80px; right: 0; bottom: 0;
 	background-image:
 		-webkit-linear-gradient(left, rgba(80, 86, 96, 0.09) 1px, transparent 1px),
 		-webkit-linear-gradient(top, rgba(80, 86, 96, 0.09) 1px, transparent 1px);
@@ -60,9 +62,12 @@ html, body {
 		linear-gradient(to bottom, rgba(80, 86, 96, 0.09) 1px, transparent 1px);
 	background-size: 80px 80px;
 	-webkit-animation: drift 40s linear infinite; animation: drift 40s linear infinite;
+	-webkit-backface-visibility: hidden; backface-visibility: hidden; will-change: transform;
 }
-@-webkit-keyframes drift { from { background-position: 0 0; } to { background-position: 80px 80px; } }
-@keyframes drift { from { background-position: 0 0; } to { background-position: 80px 80px; } }
+/* 0.337: moved by transform, not background-position -- the old drift
+   repainted the whole screen every frame and added to the join stutter. */
+@-webkit-keyframes drift { from { -webkit-transform: translate3d(0, 0, 0); } to { -webkit-transform: translate3d(80px, 80px, 0); } }
+@keyframes drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(80px, 80px, 0); } }
 
 #glow {
 	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
@@ -85,9 +90,16 @@ html, body {
 	background: -webkit-linear-gradient(top, rgba(190, 40, 45, 0) 0%, rgba(190, 40, 45, 0.05) 85%, rgba(255, 110, 115, 0.18) 100%);
 	background: linear-gradient(to bottom, rgba(190, 40, 45, 0) 0%, rgba(190, 40, 45, 0.05) 85%, rgba(255, 110, 115, 0.18) 100%);
 	-webkit-animation: sweep 9s linear infinite; animation: sweep 9s linear infinite;
+	-webkit-backface-visibility: hidden; backface-visibility: hidden; will-change: transform;
 }
-@-webkit-keyframes sweep { from { top: -22vh; } to { top: 100%; } }
-@keyframes sweep { from { top: -22vh; } to { top: 100%; } }
+@-webkit-keyframes sweep { from { -webkit-transform: translate3d(0, 0, 0); } to { -webkit-transform: translate3d(0, 122vh, 0); } }
+@keyframes sweep { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 122vh, 0); } }
+
+/* 0.337: the arrival waits (paused at its first frame) until the game runs
+   smoothly -- see Settle() -- so it never plays half-seen through a hitch. */
+.hold .in, .hold #titlewrap, .hold #titleedge, .hold #rule {
+	-webkit-animation-play-state: paused; animation-play-state: paused;
+}
 
 /* ---- arrival: everything on one clock ---- */
 .in { opacity: 0; -webkit-animation: arrive 0.7s ease-out both; animation: arrive 0.7s ease-out both; }
@@ -212,8 +224,9 @@ html, body {
 .seg.on { background: #be282d; }
 .seg.head { background: #ff6a6f; -webkit-animation: pulse 0.8s ease-in-out infinite; animation: pulse 0.8s ease-in-out infinite; }
 #fillline { height: 2px; margin-top: 0.5vh; background: rgba(70, 76, 86, 0.3); position: relative; }
-#fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #be282d;
-	-webkit-transition: width 0.3s ease-out; transition: width 0.3s ease-out; }
+#fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #be282d;
+	-webkit-transform-origin: 0 50%; transform-origin: 0 50%;
+	-webkit-transform: scaleX(0); transform: scaleX(0); }
 
 #track { margin-top: 1.3vh; height: 2.4vh; overflow: hidden; white-space: nowrap; font-size: 0; }
 .stage {
@@ -291,7 +304,7 @@ td.what { color: #aeb5bd; }
 }
 </style>
 </head>
-<body>
+<body class="hold">
 <div id="grid"></div>
 <div id="glow"></div>
 <div id="sweep"></div>
@@ -506,8 +519,10 @@ function TypeInto(element, text, perSecond, delay, caret, done) {
 	}, delay || 0);
 }
 
-// The location line types itself in after the rule is drawn.
-TypeInto($("where"), TEXT.where, 40, 2300, false);
+// The location line types itself in after the rule is drawn (Settle starts it).
+function TypeWhere() {
+	TypeInto($("where"), TEXT.where, 40, 2300, false);
+}
 
 // Standing directives: typed out, held, then the next one.
 (function Directives() {
@@ -599,7 +614,8 @@ function AccessMark(text) {
 var filesTotal = 0;
 var filesNeeded = 0;
 var neededKnown = false;
-var shown = 0;          // what the bar shows (never goes back)
+var shown = 0;          // what the bar shows (never goes back; glides to goal)
+var goal = 0;           // where the load really is (never goes back)
 var floorAt = 0.02;     // the current stage's start
 var ceilAt = 0.10;      // where the creep stops for this stage
 var label = "";         // right-hand readout ("" = percentage)
@@ -626,13 +642,35 @@ function setPhase(index) {
 	phase = Math.max(phase, index);
 }
 
-function draw() {
-	$("fill").style.width = (shown * 100).toFixed(1) + "%";
-	$("percent").innerHTML = label || (Math.floor(shown * 100) + "%");
+var drawn = {fill: -1, text: "", full: -1};
 
-	var segs = $("segs").childNodes;
+// The bar: fill, readout and segments, touched only when they change.
+function drawBar() {
+	var fill = Math.round(shown * 1000) / 1000;
+
+	if (fill !== drawn.fill) {
+		drawn.fill = fill;
+		$("fill").style.webkitTransform = "scaleX(" + fill + ")";
+		$("fill").style.transform = "scaleX(" + fill + ")";
+	}
+
+	var text = label || (Math.floor(shown * 100) + "%");
+
+	if (text !== drawn.text) {
+		drawn.text = text;
+		$("percent").innerHTML = text;
+	}
+
 	var lit = shown * SEGMENTS;
 	var full = Math.floor(lit);
+
+	if (full === drawn.full) {
+		return;
+	}
+
+	drawn.full = full;
+
+	var segs = $("segs").childNodes;
 
 	for (var i = 0; i < segs.length; i++) {
 		var name = i < full ? "seg on" : (i === full && lit < SEGMENTS ? "seg head" : "seg");
@@ -641,7 +679,10 @@ function draw() {
 			segs[i].className = name;
 		}
 	}
+}
 
+// The stage track and its counter.
+function drawTrack() {
 	var chips = $("track").childNodes;
 
 	for (var j = 0; j < chips.length; j++) {
@@ -655,12 +696,18 @@ function draw() {
 	$("stagecount").innerHTML = "STAGE " + (phase + 1) + " / " + STAGE_NAMES.length;
 }
 
+function draw() {
+	drawBar();
+	drawTrack();
+}
+
 function setStage(floor, ceil) {
-	// a stage never moves the bar backwards
+	// a stage never moves the bar backwards; the frame loop glides the
+	// shown bar up to it (0.337: it used to snap)
 	floorAt = Math.max(floorAt, floor);
 	ceilAt = Math.max(ceilAt, ceil, floorAt);
-	shown = Math.max(shown, floorAt);
-	draw();
+	goal = Math.max(goal, floorAt);
+	drawTrack();
 }
 
 // "12/108", "12 of 108", "(45%)" in a status line -> 0..1, or -1
@@ -689,7 +736,7 @@ function refreshFiles() {
 		// server files fill from where the bar stood when they started up
 		// to 60% (they can come before or after the workshop packs)
 		if (fileBase < 0) {
-			fileBase = Math.min(shown, 0.55);
+			fileBase = Math.min(goal, 0.55);
 		}
 
 		if (filesNeeded > 0) {
@@ -702,13 +749,71 @@ function refreshFiles() {
 	}
 }
 
-// the creep: a little closer to the stage ceiling every quarter second
-setInterval(function () {
-	if (shown < ceilAt) {
-		shown = Math.min(ceilAt, shown + Math.max((ceilAt - shown) * 0.02, 0.0004));
-		draw();
+// ---- one frame loop ---------------------------------------------------------
+//
+// 0.337 (Daan: "the game sometimes freezes ... the loading screen will feel
+// jumpy"): nothing on the page can run while the game itself is frozen, so
+// the bar is driven by ONE loop whose time step is CLAMPED (at most 0.1 s):
+// after a freeze it carries on from where it stood instead of jumping
+// ahead, and a new stage glides the bar up over about a second. The goal
+// creeps toward the stage ceiling so the bar never stands still.
+
+var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
+	function (fn) { return setTimeout(fn, 33); };
+var lastFrame = 0;
+
+function Frame() {
+	var now = new Date().getTime();
+	var dt = lastFrame ? Math.min(Math.max((now - lastFrame) / 1000, 0), 0.1) : 0;
+
+	lastFrame = now;
+
+	if (goal < ceilAt) {
+		goal = Math.min(ceilAt, goal + Math.max((ceilAt - goal) * 0.08, 0.0016) * dt);
 	}
-}, 250);
+
+	if (shown < goal) {
+		shown = shown + (goal - shown) * (1 - Math.exp(-dt * 4));
+
+		if (goal - shown < 0.0005) {
+			shown = goal;
+		}
+	}
+
+	drawBar();
+	raf(Frame);
+}
+
+raf(Frame);
+
+// The arrival waits for smooth frames: 0.4 s with no frame slower than
+// 1/20 s, or 2.5 s at most -- then everything arrives on its one clock.
+(function Settle() {
+	var opened = new Date().getTime();
+	var smoothSince = 0;
+	var last = opened;
+
+	function check() {
+		var now = new Date().getTime();
+
+		if (now - last > 50) {
+			smoothSince = now;
+		}
+
+		last = now;
+
+		if (now - smoothSince >= 400 && smoothSince > 0 || now - opened >= 2500) {
+			document.body.className = "";
+			TypeWhere();
+			return;
+		}
+
+		raf(check);
+	}
+
+	smoothSince = opened;
+	raf(check);
+})();
 
 // Called by Garry's Mod ------------------------------------------------------
 
