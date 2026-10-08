@@ -1,9 +1,11 @@
-IMPERIAL OCCUPATION -- LOADING SCREEN (0.152)
-=============================================
-What players see while they connect: the crest, "Welcome to the server",
-a progress bar with the file being downloaded, useful commands, a rotating
-Imperial directive and a tip for new players. Same colours, crest and fonts
-as the in-game interface.
+IMPERIAL OCCUPATION -- LOADING SCREEN (0.152; face lift 0.331)
+=============================================================
+What players see while they connect: the crest, the uplink console (status,
+signal bar, load stages, the file being downloaded), useful commands, a
+typed Imperial directive, a tip for new players and a city-address ticker.
+Same colours, crest and fonts as the in-game interface. The bottom-right
+corner is left empty on purpose: Garry's Mod draws its own grey status box
+and Cancel button there.
 
 Files:  index.html      the page (all words are in the TEXT block at the bottom)
         fonts/          the fonts the content pack ships (Star Jedi, Roboto
@@ -22,8 +24,9 @@ ONE-TIME SETUP (free, about 5 minutes)
      / (root), Save. After a minute the page is at
          https://daand1309.github.io/ixempire-loading/
      (open it in a browser to check -- it shows the screen with no progress).
-  4. In game: F1 -> Config -> Empire -> loadingScreenURL = that address.
-     It applies at once; players who connect after that see it.
+  4. Done: since 0.154 the config loadingScreenURL (TAB -> Config -> Empire)
+     already holds https://daand1309.github.io/ixempire-loading/, and the
+     server forces it over server.cfg and the host panel every 30 seconds.
 
   Any other web host works just as well: upload the folder, put its address
   in loadingScreenURL.
