@@ -337,36 +337,96 @@ Rotator($("directive-text"), TEXT.directives, 9);
 Rotator($("tip-text"), TEXT.tips, 11);
 
 // ---- loading progress ------------------------------------------------------
+//
+// 0.323 (Daan: "the loading bar does not update past a certain point"):
+// the bar used to jump to 95% on "Workshop Complete" (it matched the word
+// "complete") and to 90% on "Sending client info" (it matched "sending"),
+// then nothing could move it again; while files were pending it ignored the
+// status lines altogether. Now a load runs through ordered STAGES, each a
+// band of the bar. The band's floor is shown at once and the bar creeps
+// toward its ceiling on a timer, so it never stands still -- a stage never
+// moves the bar backwards, and only the end of the load reaches 100%.
 
 var filesTotal = 0;
 var filesNeeded = 0;
 var neededKnown = false;
-var stageShown = 0;
+var shown = 0;          // what the bar shows (never goes back)
+var floorAt = 0.02;     // the current stage's start
+var ceilAt = 0.10;      // where the creep stops for this stage
+var label = "";         // right-hand readout ("" = percentage)
+var fileBase = -1;      // where the bar stood when the file count began
 
-// Rough stage of a load with nothing to download, from Garry's Mod's status lines.
+// Checked IN ORDER, first match wins. [words, floor, ceiling]
 var STAGES = [
-	["retrieving", 0.10], ["sending client", 0.20], ["workshop", 0.35], ["mounting", 0.45],
-	["downloading", 0.50], ["lua", 0.70], ["client info", 0.75], ["starting", 0.85],
-	["sending", 0.90], ["complete", 0.95]
+	["retrieving server", 0.04, 0.10],
+	["workshop complete", 0.55, 0.60],
+	["mounting", 0.50, 0.58],
+	["workshop", 0.10, 0.50],
+	["downloading", 0.12, 0.50],
+	["sending client info", 0.62, 0.70],
+	["client info sent", 0.70, 0.76],
+	["requesting", 0.72, 0.80],
+	["lua", 0.76, 0.93],
+	["starting", 0.80, 0.95],
+	["loading", 0.80, 0.95],
+	["complete", 0.90, 0.97]
 ];
 
-function setProgress(fraction) {
-	fraction = Math.max(0, Math.min(1, fraction));
-	stageShown = Math.max(stageShown, fraction);
-	$("fill").style.width = (stageShown * 100).toFixed(1) + "%";
-	$("percent").innerHTML = Math.floor(stageShown * 100) + "%";
+function draw() {
+	$("fill").style.width = (shown * 100).toFixed(1) + "%";
+	$("percent").innerHTML = label || (Math.floor(shown * 100) + "%");
+}
+
+function setStage(floor, ceil) {
+	// a stage never moves the bar backwards
+	floorAt = Math.max(floorAt, floor);
+	ceilAt = Math.max(ceilAt, ceil, floorAt);
+	shown = Math.max(shown, floorAt);
+	draw();
+}
+
+// "12/108", "12 of 108", "(45%)" in a status line -> 0..1, or -1
+function partOf(text) {
+	var m = text.match(/(\d+)\s*(?:\/|of)\s*(\d+)/i);
+
+	if (m && Number(m[2]) > 0) {
+		return Math.min(1, Number(m[1]) / Number(m[2]));
+	}
+
+	m = text.match(/(\d+(?:\.\d+)?)\s*%/);
+
+	if (m) {
+		return Math.min(1, Number(m[1]) / 100);
+	}
+
+	return -1;
 }
 
 function refreshFiles() {
-	// SetFilesTotal comes before SetFilesNeeded: until both are in, "all
-	// files done" would read as 90%.
+	// SetFilesTotal comes before SetFilesNeeded: wait for both.
 	if (filesTotal > 0 && neededKnown) {
 		var done = Math.max(0, filesTotal - filesNeeded);
+		var part = done / filesTotal;
 
-		setProgress(done / filesTotal * 0.9);
-		$("percent").innerHTML = done + " / " + filesTotal + " FILES";
+		// server files fill from where the bar stood when they started up
+		// to 60% (they can come before or after the workshop packs)
+		if (fileBase < 0) {
+			fileBase = Math.min(shown, 0.55);
+		}
+
+		setStage(fileBase + (0.60 - fileBase) * part, fileBase + (0.60 - fileBase) * Math.min(1, part + 0.05));
+		label = filesNeeded > 0 ? (done + " / " + filesTotal + " FILES") : "";
+		draw();
 	}
 }
+
+// the creep: a little closer to the stage ceiling every quarter second
+setInterval(function () {
+	if (shown < ceilAt) {
+		shown = Math.min(ceilAt, shown + Math.max((ceilAt - shown) * 0.02, 0.0004));
+		draw();
+	}
+}, 250);
 
 // Called by Garry's Mod ------------------------------------------------------
 
@@ -382,7 +442,7 @@ function SetFilesTotal(total) {
 }
 
 function SetFilesNeeded(needed) {
-	filesNeeded = Number(needed) || 0;
+	filesNeeded = Math.max(0, Number(needed) || 0);
 	neededKnown = true;
 	refreshFiles();
 }
@@ -390,9 +450,12 @@ function SetFilesNeeded(needed) {
 function DownloadingFile(fileName) {
 	$("file").innerHTML = "&gt; " + escapeHTML(fileName);
 
-	if (filesTotal > 0 && neededKnown) {
-		filesNeeded = Math.max(0, filesNeeded - 1);
+	if (filesTotal > 0 && neededKnown && filesNeeded > 0) {
+		filesNeeded = filesNeeded - 1;
 		refreshFiles();
+	} else {
+		// a download we were not told about (workshop): keep moving
+		setStage(floorAt, Math.max(ceilAt, Math.min(0.5, floorAt + 0.05)));
 	}
 }
 
@@ -400,21 +463,37 @@ function SetStatusChanged(status) {
 	status = String(status || "");
 	$("status").innerHTML = escapeHTML(status.replace(/\.+$/, "")) || "Loading";
 
-	if (filesTotal > 0 && neededKnown && filesNeeded > 0) {
-		return;
-	}
-
 	var lower = status.toLowerCase();
 
 	for (var i = 0; i < STAGES.length; i++) {
-		if (lower.indexOf(STAGES[i][0]) >= 0) {
-			setProgress(STAGES[i][1]);
+		var stage = STAGES[i];
+
+		if (lower.indexOf(stage[0]) >= 0) {
+			var part = partOf(status);
+
+			if (part >= 0 && stage[2] > stage[1]) {
+				// "Downloading 12/108 ...": place it inside the band
+				setStage(stage[1] + (stage[2] - stage[1]) * part, stage[2]);
+			} else {
+				setStage(stage[1], stage[2]);
+			}
+
+			// past the file stage the readout goes back to a percentage
+			if (stage[1] >= 0.60) {
+				label = "";
+				draw();
+			}
+
+			return;
 		}
 	}
+
+	// a line we do not know still nudges the bar
+	setStage(floorAt, Math.min(0.97, ceilAt + 0.02));
 }
 
 // A little movement even before the game says anything.
-setProgress(0.03);
+setStage(0.03, 0.10);
 </script>
 </body>
 </html>
