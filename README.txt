@@ -1,4 +1,4 @@
-IMPERIAL OCCUPATION -- LOADING SCREEN (0.152; face lift 0.331)
+PINT EMPIRE ROLEPLAY -- LOADING SCREEN (0.152; face lift 0.331)
 =============================================================
 What players see while they connect: the crest, the uplink console (status,
 signal bar, load stages, the file being downloaded), useful commands, a
@@ -8,6 +8,8 @@ corner is left empty on purpose: Garry's Mod draws its own grey status box
 and Cancel button there.
 
 Files:  index.html      the page (all words are in the TEXT block at the bottom)
+        vardos.jpg      the broadcast picture behind it (Daan's Arrivals mural,
+                        tools/art/arrivals_mural.png; redesign 0.644)
         fonts/          the fonts the content pack ships (Star Jedi, Roboto
                         Condensed, Share Tech Mono) -- keep them next to the page
 

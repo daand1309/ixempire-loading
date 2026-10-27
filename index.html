@@ -5,14 +5,23 @@
 <title>Pint Empire Roleplay</title>
 <!--
 	PINT EMPIRE ROLEPLAY -- LOADING SCREEN (0.152; words 0.298; bar 0.330;
-	face lift 0.331 in the registry / intro look; smooth through join
-	freezes 0.337 -- one frame loop with a clamped step, arrival held until
-	the game runs smoothly, background moved by transforms)
+	smooth through join freezes 0.337; REDESIGN 0.644 -- Daan: "redisign the
+	loading screen make it more up to date")
+
+	0.644: the screen is a VARDOS STATE HOLO broadcast, in the look the game
+	has now (the intro's city film, the HUD, the terminals): letterbox bars,
+	Daan's Arrivals mural (vardos.jpg) as a slow, graded push behind them, a
+	feed bug and the city clock in a hanging tab, the intro's caption block
+	(kicker, crest, Star Jedi title, red rule), the uplink as a status module
+	bottom left, terminal cards on the right (cyan spaced kickers, cut
+	corners, a drain bar on the tip), the city address ticker in the lower
+	bar.
 
 	Shown by Garry's Mod while a player connects. The server points players
 	here with the convar sv_loadingurl, which the schema sets from the Helix
 	config "loadingScreenURL" (imperialui/sh_plugin.lua). The HOSTED copy is
-	what players see: daand1309/ixempire-loading (copy index.html there).
+	what players see: daand1309/ixempire-loading (index.html, vardos.jpg and
+	fonts/ go there -- Daan: "use the loading screen github repo").
 
 	Garry's Mod calls these functions while it loads:
 	  GameDetails(serverName, serverURL, map, maxPlayers, steamID, gamemode, volume, language)
@@ -22,18 +31,12 @@
 	THE BOTTOM-RIGHT CORNER IS THE GAME'S (Daan, 0.331): Garry's Mod draws
 	its own grey status box + Cancel button there, over the page, about a
 	third of the width and the bottom eighth of the height. Nothing of ours
-	goes into #reserved's area -- the label above it points at the box.
+	goes there -- the label above it points at the box.
 
 	Plain ES5 on purpose (no arrow functions, no let/const), -webkit- prefixes
 	beside the standard ones, no calc/flex/clip-path: the game's browser is
 	not always a modern one. Fonts are the ones the content pack ships
 	(fonts/), so nothing is fetched from the internet.
-
-	Look: crest on its black disc with counter-turning rings, title wiped in
-	with a red leading edge, cut-corner plates, a segmented signal bar, the
-	load stages as a track, corner brackets with readouts, a city-address
-	ticker. Everything arrives on one clock (the .in classes and their
-	animation delays).
 
 	Words to change live in TEXT below -- the commands, directives, tips.
 -->
@@ -51,57 +54,101 @@ html, body {
 }
 .mono { font-family: "ImpMono", "Courier New", monospace; }
 
-/* ---- backdrop: drifting grid, glow, vignette, scanlines, sweep ---- */
-#grid {
-	position: absolute; left: -80px; top: -80px; right: 0; bottom: 0;
-	background-image:
-		-webkit-linear-gradient(left, rgba(80, 86, 96, 0.09) 1px, transparent 1px),
-		-webkit-linear-gradient(top, rgba(80, 86, 96, 0.09) 1px, transparent 1px);
-	background-image:
-		linear-gradient(to right, rgba(80, 86, 96, 0.09) 1px, transparent 1px),
-		linear-gradient(to bottom, rgba(80, 86, 96, 0.09) 1px, transparent 1px);
-	background-size: 80px 80px;
-	-webkit-animation: drift 40s linear infinite; animation: drift 40s linear infinite;
+/* ---- the broadcast picture: the mural, graded, pushing in slowly ---- */
+#picture { position: absolute; left: 0; right: 0; top: 9vh; bottom: 9vh; overflow: hidden; background: #0b0c0f; }
+#mural {
+	position: absolute; left: -4%; top: -6%; width: 108%; height: 112%;
+	background: url("vardos.jpg") 60% 40% no-repeat; background-size: cover;
+	opacity: 0.42; -webkit-filter: saturate(0.55) contrast(1.05); filter: saturate(0.55) contrast(1.05);
+	-webkit-animation: push 70s ease-in-out infinite alternate; animation: push 70s ease-in-out infinite alternate;
 	-webkit-backface-visibility: hidden; backface-visibility: hidden; will-change: transform;
 }
-/* 0.337: moved by transform, not background-position -- the old drift
-   repainted the whole screen every frame and added to the join stutter. */
-@-webkit-keyframes drift { from { -webkit-transform: translate3d(0, 0, 0); } to { -webkit-transform: translate3d(80px, 80px, 0); } }
-@keyframes drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(80px, 80px, 0); } }
-
-#glow {
+@-webkit-keyframes push { from { -webkit-transform: scale(1.0) translate3d(0, 0, 0); } to { -webkit-transform: scale(1.12) translate3d(-2%, -1%, 0); } }
+@keyframes push { from { transform: scale(1.0) translate3d(0, 0, 0); } to { transform: scale(1.12) translate3d(-2%, -1%, 0); } }
+/* the grade: dark on the left where the words are, a cold wash, red at the top */
+#grade {
 	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
-	background: -webkit-radial-gradient(50% 20%, circle, rgba(190, 40, 45, 0.20) 0%, rgba(190, 40, 45, 0) 34%);
-	background: radial-gradient(circle at 50% 20%, rgba(190, 40, 45, 0.20) 0%, rgba(190, 40, 45, 0) 34%);
+	background: -webkit-linear-gradient(left, rgba(5, 6, 8, 0.92) 0%, rgba(5, 6, 8, 0.72) 42%, rgba(5, 6, 8, 0.35) 70%, rgba(5, 6, 8, 0.6) 100%);
+	background: linear-gradient(to right, rgba(5, 6, 8, 0.92) 0%, rgba(5, 6, 8, 0.72) 42%, rgba(5, 6, 8, 0.35) 70%, rgba(5, 6, 8, 0.6) 100%);
+}
+#tint {
+	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+	background: -webkit-radial-gradient(18% 30%, circle, rgba(190, 40, 45, 0.16) 0%, rgba(190, 40, 45, 0) 45%);
+	background: radial-gradient(circle at 18% 30%, rgba(190, 40, 45, 0.16) 0%, rgba(190, 40, 45, 0) 45%);
 }
 #vignette {
 	position: absolute; left: 0; top: 0; right: 0; bottom: 0;
-	background: -webkit-radial-gradient(50% 45%, ellipse, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.9) 100%);
-	background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.9) 100%);
+	background: -webkit-radial-gradient(50% 50%, ellipse, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.75) 100%);
+	background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.75) 100%);
 }
 #scan {
 	position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none;
-	background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
-	background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+	background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+	background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
 	background-size: 100% 3px;
 }
-#sweep {
-	position: absolute; left: 0; right: 0; height: 22vh; top: -22vh; pointer-events: none;
-	background: -webkit-linear-gradient(top, rgba(190, 40, 45, 0) 0%, rgba(190, 40, 45, 0.05) 85%, rgba(255, 110, 115, 0.18) 100%);
-	background: linear-gradient(to bottom, rgba(190, 40, 45, 0) 0%, rgba(190, 40, 45, 0.05) 85%, rgba(255, 110, 115, 0.18) 100%);
-	-webkit-animation: sweep 9s linear infinite; animation: sweep 9s linear infinite;
+#roll {
+	position: absolute; left: 0; right: 0; height: 14vh; top: -14vh; pointer-events: none;
+	background: -webkit-linear-gradient(top, rgba(120, 190, 230, 0) 0%, rgba(120, 190, 230, 0.035) 85%, rgba(150, 210, 240, 0.09) 100%);
+	background: linear-gradient(to bottom, rgba(120, 190, 230, 0) 0%, rgba(120, 190, 230, 0.035) 85%, rgba(150, 210, 240, 0.09) 100%);
+	-webkit-animation: roll 11s linear infinite; animation: roll 11s linear infinite;
 	-webkit-backface-visibility: hidden; backface-visibility: hidden; will-change: transform;
 }
-@-webkit-keyframes sweep { from { -webkit-transform: translate3d(0, 0, 0); } to { -webkit-transform: translate3d(0, 122vh, 0); } }
-@keyframes sweep { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 122vh, 0); } }
+@-webkit-keyframes roll { from { -webkit-transform: translate3d(0, 0, 0); } to { -webkit-transform: translate3d(0, 100vh, 0); } }
+@keyframes roll { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 100vh, 0); } }
+/* the feed's corner brackets, inside the picture */
+.fb { position: absolute; width: 3.2vh; height: 3.2vh; border: 0 solid rgba(150, 160, 172, 0.55); }
+.fb.tl { left: 1.6vw; top: 2vh; border-top-width: 2px; border-left-width: 2px; }
+.fb.tr { right: 1.6vw; top: 2vh; border-top-width: 2px; border-right-width: 2px; }
+.fb.bl { left: 1.6vw; bottom: 2vh; border-bottom-width: 2px; border-left-width: 2px; }
+
+/* ---- the letterbox bars ---- */
+.bar { position: absolute; left: 0; right: 0; height: 9vh; background: #050608; }
+#top { top: 0; border-bottom: 1px solid rgba(190, 40, 45, 0.55); }
+#bottom { bottom: 0; border-top: 1px solid rgba(90, 97, 107, 0.45); }
+/* the ruler under the top bar, as on the HUD */
+#ruler { position: absolute; left: 0; right: 0; top: 9vh; height: 0.9vh; overflow: hidden;
+	background-image: -webkit-linear-gradient(left, rgba(190, 40, 45, 0.55) 1px, transparent 1px);
+	background-image: linear-gradient(to right, rgba(190, 40, 45, 0.55) 1px, transparent 1px);
+	background-size: 2.5vw 100%; opacity: 0.6; }
+
+.readout {
+	position: absolute; font-family: "ImpMono", "Courier New", monospace;
+	font-size: 1.35vh; letter-spacing: 0.25vh; color: #6a727c; white-space: nowrap; line-height: 1.7;
+}
+.readout b { color: #c6cdd5; font-weight: normal; }
+.readout i { color: #be282d; font-style: normal; }
+#bug { left: 2.4vw; top: 2.4vh; width: 31vw; }
+.readout .line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#bug .chip { display: inline-block; background: #be282d; color: #fff; padding: 0 0.8vh; margin-right: 1vh; letter-spacing: 0.25vh; }
+#bug .dot { display: inline-block; width: 0.8vh; height: 0.8vh; border-radius: 50%; background: #fff; margin-right: 0.7vh; vertical-align: middle;
+	-webkit-animation: blink 1.2s steps(2) infinite; animation: blink 1.2s steps(2) infinite; }
+#uplinkro { right: 2.4vw; top: 2.4vh; text-align: right; width: 31vw; }
+
+/* the hanging centre tab: the city and its clock */
+#tab {
+	position: absolute; left: 50%; width: 30vw; margin-left: -15vw; top: 0; height: 11.2vh; text-align: center;
+	background: #0c0d10; border: 1px solid rgba(190, 40, 45, 0.6); border-top: 0; box-sizing: border-box;
+}
+#tab:after { content: ""; position: absolute; left: 20%; right: 20%; bottom: -1px; height: 2px; background: #be282d; }
+#tab .k { font-family: "ImpMono", "Courier New", monospace; font-size: 1.25vh; letter-spacing: 0.45vh; color: #4fb3e0; margin-top: 1.6vh; }
+#clock { font-family: "ImpBody", sans-serif; font-weight: bold; font-size: 4.2vh; letter-spacing: 0.3vh; color: #eef2f5; line-height: 1.15; }
+#tab .s { font-family: "ImpMono", "Courier New", monospace; font-size: 1.15vh; letter-spacing: 0.3vh; color: #6a727c; }
+
+@-webkit-keyframes blink { 50% { opacity: 0.15; } }
+@keyframes blink { 50% { opacity: 0.15; } }
+@-webkit-keyframes spin { from { -webkit-transform: rotate(0deg); } to { -webkit-transform: rotate(360deg); } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@-webkit-keyframes spinback { from { -webkit-transform: rotate(360deg); } to { -webkit-transform: rotate(0deg); } }
+@keyframes spinback { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+@-webkit-keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
 /* 0.337: the arrival waits (paused at its first frame) until the game runs
    smoothly -- see Settle() -- so it never plays half-seen through a hitch. */
 .hold .in, .hold #titlewrap, .hold #titleedge, .hold #rule {
 	-webkit-animation-play-state: paused; animation-play-state: paused;
 }
-
-/* ---- arrival: everything on one clock ---- */
 .in { opacity: 0; -webkit-animation: arrive 0.7s ease-out both; animation: arrive 0.7s ease-out both; }
 @-webkit-keyframes arrive { from { opacity: 0; -webkit-transform: translate(0, 1.4vh); } to { opacity: 1; -webkit-transform: translate(0, 0); } }
 @keyframes arrive { from { opacity: 0; transform: translate(0, 1.4vh); } to { opacity: 1; transform: translate(0, 0); } }
@@ -113,51 +160,25 @@ html, body {
 .d6 { -webkit-animation-delay: 1.6s; animation-delay: 1.6s; }
 .d7 { -webkit-animation-delay: 1.9s; animation-delay: 1.9s; }
 
-@-webkit-keyframes blink { 50% { opacity: 0.15; } }
-@keyframes blink { 50% { opacity: 0.15; } }
-@-webkit-keyframes spin { from { -webkit-transform: rotate(0deg); } to { -webkit-transform: rotate(360deg); } }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@-webkit-keyframes spinback { from { -webkit-transform: rotate(360deg); } to { -webkit-transform: rotate(0deg); } }
-@keyframes spinback { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-@-webkit-keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
-
-/* ---- frame: corner brackets + readouts ---- */
-.br { position: absolute; width: 5vh; height: 5vh; border: 0 solid #be282d; }
-.br.tl { left: 2.4vw; top: 2.6vh; border-top-width: 2px; border-left-width: 2px; }
-.br.tr { right: 2.4vw; top: 2.6vh; border-top-width: 2px; border-right-width: 2px; }
-.br.bl { left: 2.4vw; bottom: 2.6vh; border-bottom-width: 2px; border-left-width: 2px; }
-.readout {
-	position: absolute; font-family: "ImpMono", "Courier New", monospace;
-	font-size: 1.3vh; letter-spacing: 0.22vh; color: #5d646d; white-space: nowrap; line-height: 1.6;
-}
-.readout b { color: #9aa2ac; font-weight: normal; }
-.readout i { color: #be282d; font-style: normal; }
-#ro-tl { left: 2.4vw; top: 2.6vh; margin: 1vh 0 0 1.4vw; }
-#ro-tr { right: 2.4vw; top: 2.6vh; margin: 1vh 1.4vw 0 0; text-align: right; }
-#ro-bl { left: 2.4vw; bottom: 2.6vh; margin: 0 0 0.8vh 1.4vw; }
-.live { display: inline-block; width: 0.7vh; height: 0.7vh; background: #be282d; margin-right: 0.7vh; vertical-align: middle;
-	-webkit-animation: blink 1.2s steps(2) infinite; animation: blink 1.2s steps(2) infinite; }
-
-/* ---- hero: crest, title, rule, location ---- */
-#hero { position: absolute; left: 20%; right: 20%; top: 4.5vh; text-align: center; }
-#crestwrap { position: relative; width: 15vh; height: 15vh; margin: 0 auto; }
+/* ---- the caption block (the intro film's) ---- */
+#caption { position: absolute; left: 5vw; width: 46vw; top: 19vh; }
+#kicker { font-family: "ImpMono", "Courier New", monospace; font-size: 1.5vh; letter-spacing: 0.45vh; color: #be282d; white-space: nowrap; overflow: hidden; height: 2.2vh; }
+#crestrow { position: relative; height: 13vh; margin-top: 1.6vh; }
+#crestwrap { position: absolute; left: 0; top: 0; width: 13vh; height: 13vh; }
 #crestwrap svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 #ring-a { -webkit-animation: spin 18s linear infinite; animation: spin 18s linear infinite; }
 #ring-b { -webkit-animation: spinback 26s linear infinite; animation: spinback 26s linear infinite; }
-
-/* Star Jedi draws its NORMAL capitals from the lower-case keys: keep the
-   title text in lower case. */
+#titlebox { position: absolute; left: 16vh; right: 0; top: 1.4vh; }
+/* Star Jedi draws its NORMAL capitals from the lower-case keys: keep the title text in lower case. */
 #titlewrap {
 	display: inline-block; position: relative; overflow: hidden; white-space: nowrap; max-width: 0;
-	margin-top: 1.4vh; padding: 0 0.6vh;
 	-webkit-animation: wipe 1.1s ease-out 0.9s both; animation: wipe 1.1s ease-out 0.9s both;
 }
-@-webkit-keyframes wipe { from { max-width: 0; } to { max-width: 60vw; } }
-@keyframes wipe { from { max-width: 0; } to { max-width: 60vw; } }
+@-webkit-keyframes wipe { from { max-width: 0; } to { max-width: 46vw; } }
+@keyframes wipe { from { max-width: 0; } to { max-width: 46vw; } }
 #title {
 	font-family: "StarJedi", "ImpBody", sans-serif; font-weight: normal; margin: 0;
-	font-size: 5.4vh; letter-spacing: 0.3vh; color: #e4e9ee; line-height: 1.25;
+	font-size: 4.6vh; letter-spacing: 0.25vh; color: #eef2f5; line-height: 1.2;
 	text-shadow: 0 0 2.4vh rgba(190, 40, 45, 0.45);
 }
 #titleedge {
@@ -166,195 +187,196 @@ html, body {
 }
 @-webkit-keyframes edge { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes edge { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
-#rule {
-	height: 2px; width: 0; margin: 1.2vh auto 1vh auto; position: relative;
-	background: #be282d; -webkit-animation: rule 0.9s ease-out 1.6s both; animation: rule 0.9s ease-out 1.6s both;
-}
-#rule:before, #rule:after { content: ""; position: absolute; top: -0.5vh; width: 2px; height: 1.2vh; background: #be282d; }
-#rule:before { left: 0; } #rule:after { right: 0; }
-@-webkit-keyframes rule { from { width: 0; } to { width: 34%; } }
-@keyframes rule { from { width: 0; } to { width: 34%; } }
-#where { font-family: "ImpMono", "Courier New", monospace; font-size: 1.6vh; letter-spacing: 0.4vh; color: #8c949e; height: 2.2vh; white-space: nowrap; overflow: hidden; }
+#rule { height: 2px; width: 0; margin: 1.2vh 0 1vh 0; background: #be282d; -webkit-animation: rule 0.9s ease-out 1.6s both; animation: rule 0.9s ease-out 1.6s both; }
+@-webkit-keyframes rule { from { width: 0; } to { width: 100%; } }
+@keyframes rule { from { width: 0; } to { width: 100%; } }
+#where { font-family: "ImpMono", "Courier New", monospace; font-size: 1.55vh; letter-spacing: 0.35vh; color: #9aa2ac; height: 2.2vh; white-space: nowrap; overflow: hidden; }
+#lede { margin-top: 2.6vh; font-size: 2.05vh; line-height: 1.45; color: #c6cdd5; max-width: 40vw; }
+#lede b { color: #fff; }
 
-/* ---- plates: cut corners top-left / bottom-right ---- */
-.plate {
-	position: absolute; box-sizing: border-box; padding: 1.6vh 1.6vw 1.6vh 1.9vw; overflow: hidden;
-	background-image:
-		-webkit-linear-gradient(-45deg, rgba(0, 0, 0, 0) 12px, rgba(12, 13, 16, 0.9) 12px),
-		-webkit-linear-gradient(135deg, rgba(0, 0, 0, 0) 12px, rgba(12, 13, 16, 0.9) 12px);
-	background-image:
-		linear-gradient(135deg, rgba(0, 0, 0, 0) 12px, rgba(12, 13, 16, 0.9) 12px),
-		linear-gradient(-45deg, rgba(0, 0, 0, 0) 12px, rgba(12, 13, 16, 0.9) 12px);
-	background-position: left top, right bottom; background-size: 100% 50.5%; background-repeat: no-repeat;
+/* ---- cards: cut corner, spaced cyan kicker, red/cyan edges (the terminal's) ---- */
+.card {
+	position: absolute; box-sizing: border-box; padding: 1.6vh 1.4vw 1.5vh 1.6vw; overflow: hidden;
+	background: rgba(14, 16, 20, 0.9); border: 1px solid rgba(80, 88, 100, 0.45);
 }
-/* edges: top hairline after the cut, bottom hairline before it, red left bar */
-.plate .e-top { position: absolute; left: 17px; right: 0; top: 0; height: 1px; background: rgba(110, 118, 128, 0.55); }
-.plate .e-bot { position: absolute; left: 0; right: 17px; bottom: 0; height: 1px; background: rgba(110, 118, 128, 0.55); }
-.plate .e-left { position: absolute; left: 0; top: 17px; bottom: 0; width: 3px; background: #be282d; }
-.plate .e-right { position: absolute; right: 0; top: 0; bottom: 17px; width: 1px; background: rgba(110, 118, 128, 0.35); }
-.plate .cut-a, .plate .cut-b { position: absolute; width: 24px; height: 1px; background: #be282d;
-	-webkit-transform: rotate(-45deg); transform: rotate(-45deg); }
-.plate .cut-a { left: 0; top: 17px; -webkit-transform-origin: 0 0; transform-origin: 0 0; }
-.plate .cut-b { right: 0; bottom: 16px; -webkit-transform-origin: 100% 0; transform-origin: 100% 0; }
-/* square corners get brackets */
-.plate .k { position: absolute; width: 1.4vh; height: 1.4vh; border: 0 solid #be282d; }
-.plate .k-tr { right: 0; top: 0; border-top-width: 2px; border-right-width: 2px; }
-.plate .k-bl { left: 0; bottom: 0; border-bottom-width: 2px; border-left-width: 2px; }
-
-.kicker {
-	font-family: "ImpMono", "Courier New", monospace; font-size: 1.35vh; letter-spacing: 0.3vh;
-	color: #be282d; height: 2vh; white-space: nowrap; overflow: hidden;
+.card:before { content: ""; position: absolute; left: 0; top: 0; width: 1.6vh; height: 1.6vh;
+	border-top: 2px solid #4fb3e0; border-left: 2px solid #4fb3e0; }
+.card .edge { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: #be282d; }
+.card .edge.amber { background: #e6af28; }
+.kick {
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.3vh; letter-spacing: 0.42vh;
+	color: #4fb3e0; height: 2vh; white-space: nowrap; overflow: hidden;
 }
-.kicker .right { float: right; color: #6c737c; }
-.kicker .sq { display: inline-block; width: 0.8vh; height: 0.8vh; background: #be282d; margin-right: 0.8vh; vertical-align: middle;
+.kick .right { float: right; color: #6a727c; letter-spacing: 0.3vh; }
+.kick .sq { display: inline-block; width: 0.8vh; height: 0.8vh; background: #be282d; margin-right: 0.8vh; vertical-align: middle;
 	-webkit-animation: blink 1.2s steps(2) infinite; animation: blink 1.2s steps(2) infinite; }
 
-/* ---- the uplink console ---- */
-#console { left: 19%; right: 19%; top: 33vh; height: 23vh; }
-#statusrow { margin-top: 1vh; height: 4.2vh; overflow: hidden; white-space: nowrap; }
+/* ---- the uplink, bottom left: the HUD's status module ---- */
+#console { left: 5vw; width: 46vw; top: 58vh; height: 23.5vh; }
+#statusrow { margin-top: 1vh; height: 4.4vh; overflow: hidden; white-space: nowrap; }
 #status {
 	float: left; max-width: 72%; overflow: hidden; text-overflow: ellipsis;
-	font-weight: bold; font-size: 2.6vh; letter-spacing: 0.25vh; text-transform: uppercase; color: #e4e9ee; line-height: 4.2vh;
+	font-weight: bold; font-size: 2.7vh; letter-spacing: 0.2vh; text-transform: uppercase; color: #eef2f5; line-height: 4.4vh;
 }
 #status:after { content: "_"; color: #be282d; -webkit-animation: blink 0.9s steps(2) infinite; animation: blink 0.9s steps(2) infinite; }
-#percent { float: right; font-family: "ImpMono", "Courier New", monospace; font-size: 3.4vh; color: #be282d; line-height: 4.2vh; }
-
-#segs { margin-top: 0.6vh; height: 2vh; overflow: hidden; white-space: nowrap; font-size: 0; }
-.seg { display: inline-block; width: 2.2%; height: 100%; margin-right: 0.3%; background: rgba(70, 76, 86, 0.38); }
+#percent { float: right; font-weight: bold; font-size: 3.6vh; color: #be282d; line-height: 4.4vh; }
+#segs { margin-top: 0.6vh; height: 1.9vh; overflow: hidden; white-space: nowrap; font-size: 0; }
+.seg { display: inline-block; width: 2.2%; height: 100%; margin-right: 0.3%; background: rgba(70, 76, 86, 0.4);
+	-webkit-transform: skewX(-20deg); transform: skewX(-20deg); }
 .seg.on { background: #be282d; }
 .seg.head { background: #ff6a6f; -webkit-animation: pulse 0.8s ease-in-out infinite; animation: pulse 0.8s ease-in-out infinite; }
 #fillline { height: 2px; margin-top: 0.5vh; background: rgba(70, 76, 86, 0.3); position: relative; }
-#fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #be282d;
-	-webkit-transform-origin: 0 50%; transform-origin: 0 50%;
-	-webkit-transform: scaleX(0); transform: scaleX(0); }
-
+#fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #4fb3e0;
+	-webkit-transform-origin: 0 50%; transform-origin: 0 50%; -webkit-transform: scaleX(0); transform: scaleX(0); }
 #track { margin-top: 1.3vh; height: 2.4vh; overflow: hidden; white-space: nowrap; font-size: 0; }
 .stage {
 	display: inline-block; width: 19.2%; margin-right: 1%; box-sizing: border-box; height: 2.4vh; line-height: 2.2vh;
 	border: 1px solid rgba(90, 97, 107, 0.45); text-align: center; overflow: hidden;
-	font-family: "ImpMono", "Courier New", monospace; font-size: 1.2vh; letter-spacing: 0.2vh; color: #5d646d;
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.2vh; letter-spacing: 0.22vh; color: #5d646d;
 }
 .stage:last-child { margin-right: 0; }
-.stage.done { background: rgba(190, 40, 45, 0.85); border-color: #be282d; color: #120708; }
-.stage.now { border-color: #be282d; color: #ff8a8e; -webkit-animation: pulse 1.1s ease-in-out infinite; animation: pulse 1.1s ease-in-out infinite; }
-
+.stage.done { background: rgba(190, 40, 45, 0.85); border-color: #be282d; color: #fff; }
+.stage.now { border-color: #4fb3e0; color: #9fd8f2; -webkit-animation: pulse 1.1s ease-in-out infinite; animation: pulse 1.1s ease-in-out infinite; }
 #file {
 	margin-top: 1vh; height: 1.8vh; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
 	font-family: "ImpMono", "Courier New", monospace; font-size: 1.3vh; color: #77808a;
 }
 #note { margin-top: 0.4vh; font-size: 1.6vh; color: #8c949e; height: 2.2vh; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-/* ---- lower row ---- */
-#commands { left: 4.5%; width: 44%; top: 59vh; height: 28vh; }
-#directive { left: 50.5%; right: 4.5%; top: 59vh; height: 12vh; }
-#tips { left: 50.5%; right: 4.5%; top: 72.5vh; height: 10vh; }
+/* ---- the right column ---- */
+#directive { left: 56vw; right: 4vw; top: 19vh; height: 14vh; }
+#tips { left: 56vw; right: 4vw; top: 35vh; height: 12.5vh; }
+#commands { left: 56vw; right: 4vw; top: 49.5vh; height: 31vh; }
+
+#directive-text { margin-top: 0.8vh; font-size: 2.1vh; line-height: 1.4; color: #eef2f5; height: 6vh; overflow: hidden; }
+#directive-text .caret { color: #be282d; -webkit-animation: blink 0.8s steps(2) infinite; animation: blink 0.8s steps(2) infinite; }
+#directive-from { font-family: "ImpMono", "Courier New", monospace; font-size: 1.2vh; letter-spacing: 0.25vh; color: #6a727c; margin-top: 0.6vh; }
+#tip-text { margin-top: 0.8vh; font-size: 1.8vh; line-height: 1.4; color: #c6cdd5; height: 5.2vh; overflow: hidden;
+	-webkit-transition: opacity 0.6s; transition: opacity 0.6s; }
+/* the tip's drain bar, as on the in-game notices */
+#drain { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: #e6af28;
+	-webkit-transform-origin: 0 50%; transform-origin: 0 50%; }
+.draining { -webkit-animation: drain 11s linear both; animation: drain 11s linear both; }
+@-webkit-keyframes drain { from { -webkit-transform: scaleX(1); } to { -webkit-transform: scaleX(0); } }
+@keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 table { width: 100%; border-collapse: collapse; }
-td { padding: 0.32vh 0; font-size: 1.6vh; vertical-align: top; line-height: 1.35; }
+td { padding: 0.36vh 0; font-size: 1.6vh; vertical-align: top; line-height: 1.35; border-bottom: 1px solid rgba(80, 88, 100, 0.22); }
 td.cmd { width: 38%; font-family: "ImpMono", "Courier New", monospace; color: #e6af28; white-space: nowrap; padding-right: 0.8vw; }
-td.what { color: #aeb5bd; }
-.cols { overflow: hidden; margin-top: 0.6vh; }
+td.what { color: #b4bcc5; }
+.cols { overflow: hidden; margin-top: 0.8vh; }
 .cols table { float: left; width: 48.5%; }
 .cols table + table { margin-left: 3%; }
 
-#directive-text { margin-top: 0.6vh; font-size: 1.95vh; line-height: 1.4; color: #e4e9ee; height: 5.6vh; overflow: hidden; }
-#directive-text .caret { color: #be282d; -webkit-animation: blink 0.8s steps(2) infinite; animation: blink 0.8s steps(2) infinite; }
-#directive-from { font-family: "ImpMono", "Courier New", monospace; font-size: 1.2vh; letter-spacing: 0.2vh; color: #6c737c; margin-top: 0.4vh; }
-#tip-text { margin-top: 0.6vh; font-size: 1.75vh; line-height: 1.4; color: #aeb5bd; height: 5vh; overflow: hidden;
-	-webkit-transition: opacity 0.6s; transition: opacity 0.6s; }
-
-/* ---- the game's own box lives here: keep it clear ---- */
+/* ---- the game's own box lives bottom right: keep it clear ---- */
 #reserved-label {
-	position: absolute; right: 4.5%; bottom: 15vh; text-align: right;
-	font-family: "ImpMono", "Courier New", monospace; font-size: 1.2vh; letter-spacing: 0.25vh; color: #6c737c; white-space: nowrap;
+	position: absolute; right: 4vw; bottom: 13.2vh; text-align: right;
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.2vh; letter-spacing: 0.25vh; color: #6a727c; white-space: nowrap;
 }
 #reserved-label i { color: #be282d; font-style: normal; }
 
-/* ---- city address ticker (left of the game's box) ---- */
+/* ---- the city address ticker, in the lower bar (left of the game's box) ---- */
 #ticker {
-	position: absolute; left: 4.5%; width: 52%; bottom: 7.4vh; height: 2.6vh; overflow: hidden; white-space: nowrap;
+	position: absolute; left: 2.4vw; width: 58vw; bottom: 3.2vh; height: 2.8vh; overflow: hidden; white-space: nowrap;
 	border-top: 1px solid rgba(90, 97, 107, 0.4); border-bottom: 1px solid rgba(90, 97, 107, 0.4);
-	background: rgba(10, 11, 13, 0.7);
+	background: rgba(12, 13, 16, 0.9);
 }
 #ticker-tag {
-	position: absolute; left: 0; top: 0; bottom: 0; z-index: 2; padding: 0 1vh; background: #be282d; color: #120708;
-	font-family: "ImpMono", "Courier New", monospace; font-size: 1.25vh; letter-spacing: 0.2vh; line-height: 2.6vh;
+	position: absolute; left: 0; top: 0; bottom: 0; z-index: 2; padding: 0 1vh; background: #be282d; color: #fff;
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.25vh; letter-spacing: 0.25vh; line-height: 2.8vh;
 }
 #ticker-run {
 	position: absolute; left: 0; top: 0; white-space: nowrap; padding-left: 100%;
-	font-family: "ImpMono", "Courier New", monospace; font-size: 1.35vh; letter-spacing: 0.15vh; line-height: 2.6vh; color: #9aa2ac;
+	font-family: "ImpMono", "Courier New", monospace; font-size: 1.35vh; letter-spacing: 0.15vh; line-height: 2.8vh; color: #9aa2ac;
 	-webkit-animation: ticker 120s linear infinite; animation: ticker 120s linear infinite;
 }
 @-webkit-keyframes ticker { from { -webkit-transform: translate(0, 0); } to { -webkit-transform: translate(-100%, 0); } }
 @keyframes ticker { from { transform: translate(0, 0); } to { transform: translate(-100%, 0); } }
 #ticker-run i { color: #be282d; font-style: normal; }
+#mapro { left: 2.4vw; bottom: 0.4vh; }
 
 /* Narrow screens (4:3, 5:4): smaller text so the panels still fit. */
 @media (max-aspect-ratio: 3/2) {
 	td { font-size: 1.2vh; padding: 0.25vh 0; }
 	td.cmd { padding-right: 0.5vw; }
-	#directive { height: 13.5vh; }
-	#tips { top: 74vh; height: 10vh; }
-	#directive-text { font-size: 1.55vh; height: 6.6vh; }
-	#tip-text { font-size: 1.45vh; height: 6vh; }
-	#reserved-label { bottom: 13.4vh; }
-	#title { font-size: 4.4vh; }
+	#title { font-size: 3.4vh; }
+	#titlebox { left: 14vh; }
+	#lede { font-size: 1.6vh; }
 	#status { font-size: 2.1vh; }
-	#console { left: 10%; right: 10%; }
+	#directive-text { font-size: 1.6vh; }
+	#tip-text { font-size: 1.45vh; }
+	#tab { width: 36vw; margin-left: -18vw; }
+	#clock { font-size: 3.4vh; }
+	#kicker { font-size: 1.25vh; letter-spacing: 0.22vh; }
+	#where { font-size: 1.25vh; letter-spacing: 0.18vh; }
 }
 </style>
 </head>
 <body class="hold">
-<div id="grid"></div>
-<div id="glow"></div>
-<div id="sweep"></div>
-<div id="vignette"></div>
+<div id="picture">
+	<div id="mural"></div>
+	<div id="grade"></div>
+	<div id="tint"></div>
+	<div id="vignette"></div>
+	<div id="roll"></div>
+	<div class="fb tl"></div><div class="fb tr"></div><div class="fb bl"></div>
+</div>
 
-<!-- frame -->
-<div class="br tl in"></div><div class="br tr in"></div><div class="br bl in"></div>
-<div id="ro-tl" class="readout in d4"><span class="live"></span><b id="server">PINT EMPIRE ROLEPLAY</b><br>NETWORK <i>//</i> IMPERIAL RELAY 24-B <i>//</i> ENCRYPTED</div>
-<div id="ro-tr" class="readout in d4">CITY TIME <b id="clock">--:--:--</b><br>UPLINK <b id="elapsed">00:00</b> <i>//</i> ACCESS <b id="access">------</b></div>
-<div id="ro-bl" class="readout in d5">SECTOR MAP <b id="map">--</b> <i>//</i> CAPACITY <b id="players">--</b> <i>//</i> GAMEMODE <b id="gamemode">IXEMPIRERP</b></div>
+<!-- the letterbox: the station's bug, the city's clock, the uplink -->
+<div id="top" class="bar"></div>
+<div id="ruler"></div>
+<div id="bug" class="readout in d4"><div class="line"><span class="chip"><span class="dot"></span>LIVE</span><b>VARDOS STATE HOLO</b> <i>//</i> <b id="server">PINT EMPIRE ROLEPLAY</b></div><div class="line">IMPERIAL RELAY 24-B <i>//</i> ENCRYPTED</div></div>
+<div id="tab" class="in d2">
+	<div class="k">VARDOS &nbsp;//&nbsp; CITY TIME</div>
+	<div id="clock">--:--:--</div>
+	<div class="s">CORE WORLDS &nbsp;&middot;&nbsp; GALACTIC EMPIRE</div>
+</div>
+<div id="uplinkro" class="readout in d4"><div class="line">UPLINK <b id="elapsed">00:00</b> <i>//</i> ACCESS <b id="access">------</b></div><div class="line">SECTOR <b id="map">--</b> <i>//</i> CAPACITY <b id="players">--</b></div></div>
 
-<!-- hero -->
-<div id="hero">
-	<div id="crestwrap" class="in d1">
-		<!-- The black disc and thin red ring the crest always sits on. -->
-		<svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-			<circle cx="110" cy="110" r="96" fill="#0a0a0c" stroke="#be282d" stroke-width="2.5"/>
-		</svg>
-		<!-- Two counter-turning rings, as on the intro card. -->
-		<svg id="ring-a" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-			<circle cx="110" cy="110" r="104" fill="none" stroke="#be282d" stroke-width="3" stroke-dasharray="110 108" opacity="0.85"/>
-		</svg>
-		<svg id="ring-b" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-			<circle cx="110" cy="110" r="109.5" fill="none" stroke="#be282d" stroke-width="1.2" stroke-dasharray="30 84" opacity="0.6"/>
-		</svg>
-		<!-- The server insignia, the same geometry as imperialui cl_theme.lua DrawInsignia. -->
-		<svg viewBox="-40 -40 300 300" xmlns="http://www.w3.org/2000/svg">
-			<g fill="none" stroke="#be282d" stroke-width="7" stroke-linejoin="miter" stroke-linecap="square">
-				<polygon points="110,10 196.6,60 196.6,160 110,210 23.4,160 23.4,60"/>
-				<polygon points="110,58 155.03,84 155.03,136 110,162 64.97,136 64.97,84"/>
-				<line x1="110" y1="10" x2="110" y2="58"/>
-				<line x1="196.6" y1="60" x2="155.03" y2="84"/>
-				<line x1="196.6" y1="160" x2="155.03" y2="136"/>
-				<line x1="110" y1="210" x2="110" y2="162"/>
-				<line x1="23.4" y1="160" x2="64.97" y2="136"/>
-				<line x1="23.4" y1="60" x2="64.97" y2="84"/>
-				<line x1="110" y1="10" x2="110" y2="210"/>
-			</g>
-		</svg>
+<!-- the caption block -->
+<div id="caption">
+	<div id="kicker" class="in d1">INCOMING TRANSMISSION &nbsp;//&nbsp; IMPERIAL PUBLIC BROADCAST</div>
+	<div id="crestrow">
+		<div id="crestwrap" class="in d1">
+			<!-- The black disc and thin red ring the crest always sits on. -->
+			<svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+				<circle cx="110" cy="110" r="96" fill="#0a0a0c" stroke="#be282d" stroke-width="2.5"/>
+			</svg>
+			<!-- Two counter-turning rings, as on the intro card. -->
+			<svg id="ring-a" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+				<circle cx="110" cy="110" r="104" fill="none" stroke="#be282d" stroke-width="3" stroke-dasharray="110 108" opacity="0.85"/>
+			</svg>
+			<svg id="ring-b" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+				<circle cx="110" cy="110" r="109.5" fill="none" stroke="#be282d" stroke-width="1.2" stroke-dasharray="30 84" opacity="0.6"/>
+			</svg>
+			<!-- The server insignia, the same geometry as imperialui cl_theme.lua DrawInsignia. -->
+			<svg id="crest" viewBox="-40 -40 300 300" xmlns="http://www.w3.org/2000/svg">
+				<g fill="none" stroke="#be282d" stroke-width="7" stroke-linejoin="miter" stroke-linecap="square">
+					<polygon points="110,10 196.6,60 196.6,160 110,210 23.4,160 23.4,60"/>
+					<polygon points="110,58 155.03,84 155.03,136 110,162 64.97,136 64.97,84"/>
+					<line x1="110" y1="10" x2="110" y2="58"/>
+					<line x1="196.6" y1="60" x2="155.03" y2="84"/>
+					<line x1="196.6" y1="160" x2="155.03" y2="136"/>
+					<line x1="110" y1="210" x2="110" y2="162"/>
+					<line x1="23.4" y1="160" x2="64.97" y2="136"/>
+					<line x1="23.4" y1="60" x2="64.97" y2="84"/>
+					<line x1="110" y1="10" x2="110" y2="210"/>
+				</g>
+			</svg>
+		</div>
+		<div id="titlebox">
+			<div id="titlewrap"><h1 id="title">pint empire roleplay</h1><div id="titleedge"></div></div>
+			<div id="rule"></div>
+			<div id="where">&nbsp;</div>
+		</div>
 	</div>
-	<div id="titlewrap"><h1 id="title">pint empire roleplay</h1><div id="titleedge"></div></div>
-	<div id="rule"></div>
-	<div id="where">&nbsp;</div>
+	<div id="lede" class="in d5">&nbsp;</div>
 </div>
 
 <!-- the uplink -->
-<div id="console" class="plate in d3">
-	<div class="e-top"></div><div class="e-bot"></div><div class="e-left"></div><div class="e-right"></div>
-	<div class="cut-a"></div><div class="cut-b"></div><div class="k k-tr"></div><div class="k k-bl"></div>
-	<div class="kicker"><span class="sq"></span>ESTABLISHING UPLINK <span class="right" id="stagecount">STAGE 1 / 5</span></div>
+<div id="console" class="card in d3">
+	<div class="edge"></div>
+	<div class="kick"><span class="sq"></span>ESTABLISHING UPLINK <span class="right" id="stagecount">STAGE 1 / 5</span></div>
 	<div id="statusrow"><span id="status">Connecting</span><span id="percent">0%</span></div>
 	<div id="segs"></div>
 	<div id="fillline"><div id="fill"></div></div>
@@ -363,38 +385,38 @@ td.what { color: #aeb5bd; }
 	<div id="note">&nbsp;</div>
 </div>
 
-<!-- lower row -->
-<div id="commands" class="plate in d5">
-	<div class="e-top"></div><div class="e-bot"></div><div class="e-left"></div><div class="e-right"></div>
-	<div class="cut-a"></div><div class="cut-b"></div><div class="k k-tr"></div><div class="k k-bl"></div>
-	<div class="kicker">USEFUL COMMANDS <span class="right">TAB IS THE MENU</span></div>
+<!-- the right column -->
+<div id="directive" class="card in d5">
+	<div class="edge"></div>
+	<div class="kick"><span class="sq"></span>STANDING DIRECTIVE <span class="right" id="directive-no">NO. 01</span></div>
+	<div id="directive-text">&nbsp;</div>
+	<div id="directive-from">-- IMPERIAL ADMINISTRATION // VARDOS</div>
+</div>
+
+<div id="tips" class="card in d6">
+	<div class="edge amber"></div>
+	<div class="kick">NEW HERE? <span class="right">OUT OF CHARACTER</span></div>
+	<div id="tip-text">&nbsp;</div>
+	<div id="drain"></div>
+</div>
+
+<div id="commands" class="card in d7">
+	<div class="kick">QUICK KEYS <span class="right">TAB IS THE MENU</span></div>
 	<div class="cols">
 		<table id="cmds-a"></table>
 		<table id="cmds-b"></table>
 	</div>
 </div>
 
-<div id="directive" class="plate in d6">
-	<div class="e-top"></div><div class="e-bot"></div><div class="e-left"></div><div class="e-right"></div>
-	<div class="cut-a"></div><div class="cut-b"></div><div class="k k-tr"></div><div class="k k-bl"></div>
-	<div class="kicker"><span class="sq"></span>STANDING DIRECTIVE <span class="right" id="directive-no">NO. 01</span></div>
-	<div id="directive-text">&nbsp;</div>
-	<div id="directive-from">-- IMPERIAL ADMINISTRATION // VARDOS</div>
-</div>
-
-<div id="tips" class="plate in d7">
-	<div class="e-top"></div><div class="e-bot"></div><div class="e-left"></div><div class="e-right"></div>
-	<div class="cut-a"></div><div class="cut-b"></div><div class="k k-tr"></div><div class="k k-bl"></div>
-	<div class="kicker">NEW HERE? <span class="right">OUT OF CHARACTER</span></div>
-	<div id="tip-text">&nbsp;</div>
-</div>
-
 <div id="reserved-label" class="in d7">GAME CLIENT LINK <i>//</i> STATUS BELOW <i>&#9662;</i></div>
 
+<!-- the lower bar -->
+<div id="bottom" class="bar"></div>
 <div id="ticker" class="in d7">
 	<div id="ticker-tag">CITY ADDRESS</div>
 	<div id="ticker-run">&nbsp;</div>
 </div>
+<div id="mapro" class="readout in d7">GAMEMODE <b id="gamemode">IXEMPIRERP</b> <i>//</i> TRANSMISSION ENDS WHEN YOU ARRIVE</div>
 
 <div id="scan"></div>
 
@@ -406,8 +428,8 @@ var TEXT = {
 		["F2", "Emote wheel"],
 		["/FAQ [word]", "The city handbook"],
 		["/Report", "Ask staff for help"],
-		["//  or /OOC", "Out-of-character chat (everyone)"],
-		[".//  or /LOOC", "Out-of-character chat (nearby)"],
+		["//  or /OOC", "OOC chat (everyone)"],
+		[".//  or /LOOC", "OOC chat (nearby)"],
 		["/Me", "Describe an action"],
 		["/It", "Describe the world around you"],
 		["/W  /Y", "Whisper or yell"],
@@ -467,6 +489,9 @@ var TEXT = {
 // Fixed lines on the page.
 TEXT.where = "VARDOS  //  CORE WORLDS  //  GALACTIC EMPIRE";
 TEXT.note = "First visit? The content pack downloads once and can take a few minutes -- after that it is much faster.";
+// Under the title: what the server is, in two lines.
+TEXT.lede = "A Star Wars city roleplay under the <b>Galactic Empire</b>. Live as a citizen, serve in a branch of the Empire, " +
+	"run a shop, work the clinic -- or join a secret cell. <b>Vardos</b> is what you make of it.";
 
 // ---------------------------------------------------------------------------
 
@@ -536,6 +561,8 @@ function TypeWhere() {
 	TypeInto($("where"), TEXT.where, 40, 2300, false);
 }
 
+$("lede").innerHTML = TEXT.lede;
+
 // Standing directives: typed out, held, then the next one.
 (function Directives() {
 	var index = Math.floor(Math.random() * TEXT.directives.length);
@@ -558,6 +585,8 @@ function TypeWhere() {
 	var element = $("tip-text");
 	var index = Math.floor(Math.random() * TEXT.tips.length);
 
+	var drain = $("drain");
+
 	function show() {
 		element.style.opacity = 0;
 
@@ -565,6 +594,11 @@ function TypeWhere() {
 			element.innerHTML = escapeHTML(TEXT.tips[index]);
 			element.style.opacity = 1;
 			index = (index + 1) % TEXT.tips.length;
+
+			// the drain bar runs out with the tip (restarted by re-adding its class)
+			drain.className = "";
+			void drain.offsetWidth;
+			drain.className = "draining";
 		}, 600);
 	}
 
