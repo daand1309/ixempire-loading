@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Imperial Occupation</title>
+<title>Pint Empire Roleplay</title>
 <!--
-	IMPERIAL OCCUPATION -- LOADING SCREEN (0.152; words 0.298; bar 0.330;
+	PINT EMPIRE ROLEPLAY -- LOADING SCREEN (0.152; words 0.298; bar 0.330;
 	face lift 0.331 in the registry / intro look; smooth through join
 	freezes 0.337 -- one frame loop with a clamped step, arrival held until
 	the game runs smoothly, background moved by transforms)
@@ -312,7 +312,7 @@ td.what { color: #aeb5bd; }
 
 <!-- frame -->
 <div class="br tl in"></div><div class="br tr in"></div><div class="br bl in"></div>
-<div id="ro-tl" class="readout in d4"><span class="live"></span><b id="server">IMPERIAL OCCUPATION</b><br>NETWORK <i>//</i> IMPERIAL RELAY 24-B <i>//</i> ENCRYPTED</div>
+<div id="ro-tl" class="readout in d4"><span class="live"></span><b id="server">PINT EMPIRE ROLEPLAY</b><br>NETWORK <i>//</i> IMPERIAL RELAY 24-B <i>//</i> ENCRYPTED</div>
 <div id="ro-tr" class="readout in d4">CITY TIME <b id="clock">--:--:--</b><br>UPLINK <b id="elapsed">00:00</b> <i>//</i> ACCESS <b id="access">------</b></div>
 <div id="ro-bl" class="readout in d5">SECTOR MAP <b id="map">--</b> <i>//</i> CAPACITY <b id="players">--</b> <i>//</i> GAMEMODE <b id="gamemode">IXEMPIRERP</b></div>
 
@@ -345,7 +345,7 @@ td.what { color: #aeb5bd; }
 			</g>
 		</svg>
 	</div>
-	<div id="titlewrap"><h1 id="title">imperial occupation</h1><div id="titleedge"></div></div>
+	<div id="titlewrap"><h1 id="title">pint empire roleplay</h1><div id="titleedge"></div></div>
 	<div id="rule"></div>
 	<div id="where">&nbsp;</div>
 </div>
@@ -379,7 +379,7 @@ td.what { color: #aeb5bd; }
 	<div class="cut-a"></div><div class="cut-b"></div><div class="k k-tr"></div><div class="k k-bl"></div>
 	<div class="kicker"><span class="sq"></span>STANDING DIRECTIVE <span class="right" id="directive-no">NO. 01</span></div>
 	<div id="directive-text">&nbsp;</div>
-	<div id="directive-from">-- IMPERIAL ADMINISTRATION // CITY-24</div>
+	<div id="directive-from">-- IMPERIAL ADMINISTRATION // VARDOS</div>
 </div>
 
 <div id="tips" class="plate in d7">
@@ -413,11 +413,11 @@ var TEXT = {
 		["/W  /Y", "Whisper or yell"],
 		["/PM", "Private message a player"],
 		["/Apply", "Present your papers"],
-		["/Roll", "Roll a number"],
+		["Hold E", "Act on the person you face"],
 		["/Merits", "Merits, grade and honour roll"],
 		["/Shift", "Your labour shift"],
-		["/QuestBook", "Your quests"],
-		["/MyApartment", "The way to your flat"]
+		["/Treat me", "Your medical menu"],
+		["/QuestBook", "Your quests"]
 	],
 
 	// In-character propaganda, one at a time.
@@ -432,6 +432,12 @@ var TEXT = {
 		"Licensed trade serves the city. Unlicensed trade serves the enemy.",
 		"The underground is off limits. What lives down there is not your concern.",
 		"Rations are issued by standing. Loyal citizens eat well.",
+		"A warrant on the Wanted Board is a debt to the Empire. Those who harbour the wanted share it.",
+		"Read the City Press. Every word is passed by the Ministry of Information for your benefit.",
+		"Under Martial Law, every order of the garrison is law. Stay off the streets.",
+		"Report every sign of the Calyx pathogen. Quarantine protects the many.",
+		"Gambling at the Vardos Imperial Grand Casino is licensed and taxed. Games elsewhere are not.",
+		"The Imperial Clinic treats citizens in good standing. Your record follows you to the bed.",
 		"Order is peace. Peace is the gift of the Empire."
 	],
 
@@ -442,7 +448,13 @@ var TEXT = {
 		"This is a serious roleplay server: stay in character, and use // or .// for anything out of character.",
 		"Stuck, bugged or wronged? Type /Report and a staff member will come to you.",
 		"New citizens get papers with a chain code. Keep them -- officers will ask you to hand them over.",
-		"Terminals open on a menu: pick a tile, or type in the search box to find what you need.",
+		"Imperial terminals open on your DESK: what is waiting for you and your duties. ALL TABS lists everything else.",
+		"Hold E on a person to see what you can do to them; TAB > ACTIONS has the things you can do yourself.",
+		"Hurt? /Treat me opens the medical menu. Bleeding out is real -- find a medic or the Clinic.",
+		"The Vardos Imperial Grand Casino: blackjack, Hold'em, sabacc, roulette, dice, pazaak and the slots. Buy chips at the cage.",
+		"The Hutt's people drink at the Grisly Grotto. Crime pays -- until the Police put a warrant on you.",
+		"Rebels are citizens too: cells are founded in secret at a Rebel Terminal. Nobody is told who is in one.",
+		"Officers wear comlinks: one net per branch, plus IMPERIAL for everyone. A stolen one only hisses.",
 		"Work a shift at a Labour Terminal to earn credits and merits. Two hours idle costs merits.",
 		"Need a permit, a flat or a shop licence? File a petition at the Civic Petition Terminal.",
 		"Want to serve? Citizens can apply to the Police or Government at the Civic Petition Terminal.",
@@ -453,7 +465,7 @@ var TEXT = {
 };
 
 // Fixed lines on the page.
-TEXT.where = "VARDOS CITY-24  //  OUTER RIM  //  GALACTIC EMPIRE";
+TEXT.where = "VARDOS  //  CORE WORLDS  //  GALACTIC EMPIRE";
 TEXT.note = "First visit? The content pack downloads once and can take a few minutes -- after that it is much faster.";
 
 // ---------------------------------------------------------------------------
